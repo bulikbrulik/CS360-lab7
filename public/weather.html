@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>City Finder</title>
+<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+
+</head>
+<body>
+<form>
+Enter A Utah City: <input type="text" id="cityfield" value=""><br>
+Suggestion: <span id="txtHint">Empty</span>
+<input id="button" type="submit" value="Submit">
+</form>
+<p>City</p>
+<textarea id="dispcity">No City</textarea>
+<p>Current Weather</p>
+<div id="weather">No weather</div><br>
+<form>
+Search for a last name
+: <input type="text" id="movieQuery" value="">
+<input id="button2" type="submit" value="Search">
+</form>
+<p>Rank of last name popularity according to 1990 census:</p>
+<div id="movies">No last name</div><br>
+
+<script>
+$(document).ready(function() {
+$( "#cityfield" ).keyup(function() {
+  var url = "http://cs360.duckdns.org:3000/getcity?q=" + $("#cityfield").val();
+  $.getJSON(url,function(data) {
+    var everything;
+    everything = "<ul>";
+    $.each(data, function(i,item) {
+      everything += "<li> "+data[i].city;
+    });
+    everything += "</ul>";
+    console.log(everything);
+    $("#txtHint").html(everything);
+  })
+  .done(function() { console.log('getJSON request succeeded!'); })
+  .fail(function(jqXHR, textStatus, errorThrown) { 
+    console.log('getJSON request failed! ' + textStatus); 
+    console.log("incoming "+jqXHR.responseText);
+  })
+  .always(function() { console.log('getJSON request ended!');
+  })
+  .complete(function() { console.log("complete"); });
+});
+});
+
+$("#button").click(function(e){
+  var value = $("#cityfield").val();
+  console.log(value);
+  e.preventDefault();
+  $("#dispcity").text(value);
+
+ var myurl= "https://api.wunderground.com/api/5f31727bbaed3758/geolookup/conditions/q/UT/";
+  myurl += value;
+  myurl += ".json";
+  console.log(myurl);
+  $.ajax({
+    url : myurl,
+    dataType : "jsonp",
+    success : function(parsed_json) {
+      var location = parsed_json['location']['city'];
+      var temp_string = parsed_json['current_observation']['temperature_string'];
+      var current_weather = parsed_json['current_observation']['weather'];
+      everything = "<ul>";
+      everything += "<li>Location: "+location;
+      everything += "<li>Temperature: "+temp_string;
+      everything += "<li>Weather: "+current_weather;
+      everything += "</ul>";
+      $("#weather").html(everything);
+    }
+  });
+});
+$("#button2").click(function(e){
+e.preventDefault();
+var baseUrl = "http://cs360.duckdns.org:3000/getname?q=";
+
+var url = baseUrl+$("#movieQuery").val();
+$.getJSON(url,function(data1) {
+    var everything;
+    everything = "<ul>";
+    $.each(data1, function(i,item) {
+      var rslt = data1[i].name.split(" ");
+      everything += "<li> "+ rslt[0] + "<br>Rank: " + rslt[rslt.length-1];
+    });
+    everything += "</ul>";
+    console.log(everything);
+    $("#movies").html(everything);
+  })
+});
+</script>
+</body>
+</html>
